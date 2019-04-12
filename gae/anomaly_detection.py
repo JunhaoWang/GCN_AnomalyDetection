@@ -17,16 +17,18 @@ FLAGS = flags.FLAGS
 
 
 class AnomalyDetectionRunner():
-    def __init__(self, settings):
-        self.data_name = settings['data_name']
-        self.iteration = settings['iterations']
-        self.model = settings['model']
+    def __init__(self):
+        self.iteration = FLAGS.iterations
+        self.model = FLAGS.gcn_model
 
+        self.adj_mat = FLAGS.adj_mat_path
+        self.attr_mat = FLAGS.attr_path
+        self.use_features = FLAGS.features
 
     def erun(self):
         model_str = self.model
         # load data
-        feas = format_data(self.data_name)
+        feas = format_data(self.adj_mat, self.attr_mat, self.use_features)
         print("feature number: {}".format(feas['num_features']))
 
         # Define placeholders
@@ -61,10 +63,5 @@ class AnomalyDetectionRunner():
             for index in sorted_errors:
                 f.write("%s\n" % feas['labels'][index][0])
 
-	df = pd.DataFrame({'AD-GCA':reconstruction_errors})
-	df.to_csv('output/{}-scores.csv'.format(self.data_name), index=False, sep=',')
-	
-
-
-
-
+        df = pd.DataFrame({'AD-GCA':reconstruction_errors})
+        df.to_csv('output/{}-scores.csv'.format(self.data_name), index=False, sep=',')

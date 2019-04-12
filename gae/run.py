@@ -1,9 +1,11 @@
-import tensorflow as tf
+import sys
 import numpy as np
+import tensorflow as tf
+
 from anomaly_detection import AnomalyDetectionRunner
+
 flags = tf.app.flags
 FLAGS = flags.FLAGS
-
 
 flags.DEFINE_integer('hidden3', 64, 'Number of units in hidden layer 3.')
 flags.DEFINE_integer('discriminator_out', 0, 'discriminator_out.')
@@ -17,24 +19,13 @@ flags.DEFINE_integer('features', 1, 'Whether to use features (1) or not (0).')
 flags.DEFINE_integer('seed', 50, 'seed for fixing the results.')
 flags.DEFINE_integer('iterations', 300, 'number of iterations.')
 flags.DEFINE_float('alpha', 0.8, 'balance parameter')
+flags.DEFINE_string('gcn_model', sys.argv[1], 'model to use.')
+flags.DEFINE_string('adj_mat_path', sys.argv[2], 'Path to adjacency matrix')
+flags.DEFINE_string('attr_path', sys.argv[3], 'Path to attributes matrix')
 
-
-'''
-We did not set any seed when we conducted the experiments described in the paper;
-We set a seed here to steadily reveal better performance of ARGA
-'''
 seed = 7
 np.random.seed(seed)
 tf.set_random_seed(seed)
 
-data_list = ['BlogCatalog', 'Flickr', 'Amazon', 'Enron', 'Disney']
-dataname = data_list[2]
-model = 'gcn_ae'  # 'arga_ae' or 'arga_vae'
-task = 'anomaly_detection'
-settings = {'data_name': dataname, 'iterations' : FLAGS.iterations, 'model' : model}
-
-runner = None
-if task == 'anomaly_detection':
-    runner = AnomalyDetectionRunner(settings)
-
+runner = AnomalyDetectionRunner()
 runner.erun()
