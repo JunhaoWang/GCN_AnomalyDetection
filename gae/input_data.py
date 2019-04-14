@@ -25,7 +25,12 @@ def format_data(adj_mat_path, attr_mat_path, use_features):
     adj_mat = np.load(adj_mat_path)
     attr_mat = np.load(attr_mat_path)
 
-    labels = np.zeros((adj_mat.shape[0],))
+    adj_mat_length = adj_mat.shape[0]
+    indices = np.arange(adj_mat_length)
+    np.random.RandomState(seed=42).permutation(indices)[:int(0.02 * adj_mat_length)]
+
+    labels = np.zeros((adj_mat_length,))
+    labels[indices] = 1
     adj = sp.lil_matrix(adj_mat)
     features = sp.csr_matrix(attr_mat)
 
