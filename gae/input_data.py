@@ -31,6 +31,7 @@ def generate_dense_block_ajacency(node_size, density):
 def format_data(adj_mat_path, attr_mat_path, use_features):
 
     adj_mat = np.load(adj_mat_path)
+    adj_mat = adj_mat.astype(np.uint8)
     attr_mat = np.load(attr_mat_path)
 
     # adj_mat_length = adj_mat.shape[0]
@@ -59,10 +60,11 @@ def format_data(adj_mat_path, attr_mat_path, use_features):
         for i in range(s_idx, e_idx):
             tracking_artificial_anomaly_aggregate.append(i)
 
-    labels = np.zeros(input_size)
+    labels = np.zeros((input_size, 1))
     for block in blocks:
         idx_s, idx_e = block['idx_range']
         labels[idx_s:idx_e] = 1
+    labels = labels.astype(np.uint8)
 
     adj = sp.lil_matrix(adj_mat)
     features = sp.csr_matrix(attr_mat)
