@@ -31,6 +31,8 @@ class AnomalyDetectionRunner():
         feas = format_data(self.adj_mat, self.attr_mat, self.use_features)
         print("feature number: {}".format(feas['num_features']))
 
+        print(feas)
+
         # Define placeholders
         placeholders = get_placeholder()
 
