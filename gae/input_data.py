@@ -28,24 +28,36 @@ def generate_dense_block_ajacency(node_size, density):
         nx.generators.dense_gnm_random_graph(node_size,edge_size), weight=None
     ).A
 
+def generate_dense_block_attribute(attr_mat, k, lam):
+    # Search over optimal ways to inject dense blocks
+    attr = attr_mat
+    n_users = attr.shape[0]
+    n_features = attr.shape[1]
+
+    num = np.exp(lam * np.sum(attr, axis=0))
+    num = np.asarray([min(i, 10000) for i in num])
+    prob_distri = num / (np.sum(num))
+    attr_idx = np.arange(n_features)
+    for i in range(n_users):
+        np.random.seed(i)
+        indices = np.random.choice(attr_idx,
+                                   size=k,
+                                   p=prob_distri)
+        attr[i][indices] = 1
+
+    return attr
+
+
 def format_data(adj_mat_path, attr_mat_path, use_features):
 
     adj_mat = np.load(adj_mat_path)
     adj_mat = adj_mat.astype(np.uint8)
     attr_mat = np.load(attr_mat_path)
 
-    # adj_mat_length = adj_mat.shape[0]
-    # indices = np.arange(adj_mat_length)
-    # np.random.RandomState(seed=42).permutation(indices)[:int(0.02 * adj_mat_length)]
-    # labels = np.zeros((adj_mat_length,))
-    # labels[indices] = 1
-
     mixed = np.concatenate((adj_mat, attr_mat), 1)
-    input_shape = mixed.shape[1]
     input_size = mixed.shape[0]
-    tracking_artificial_anomaly = np.zeros(input_size)
-    tracking_artificial_anomaly_aggregate = []
 
+    # First we inject dense blocks into the adjacency matrix
     blocks = [
         {'idx_range': (0, 1000), 'ajacency_density': .1, 'attribute_density': .3},
         {'idx_range': (2000, 3000), 'ajacency_density': .15, 'attribute_density': .3},
@@ -56,16 +68,18 @@ def format_data(adj_mat_path, attr_mat_path, use_features):
         s_idx = b['idx_range'][0]
         e_idx = b['idx_range'][1]
         adj_mat[s_idx:e_idx, s_idx:e_idx] = generate_dense_block_ajacency(e_idx - s_idx, b['ajacency_density'])
-        tracking_artificial_anomaly[s_idx:e_idx] = ind + 10
-        for i in range(s_idx, e_idx):
-            tracking_artificial_anomaly_aggregate.append(i)
 
+    # Now we inject dense blocks into the attribute matrix
+    attr_mat = generate_dense_block_attribute(attr_mat, 3, 1e-9)
+
+    # Setting labels to be 0 or 1 based on whether or not they correspond to an anomaly
     labels = np.zeros((input_size, 1))
     for block in blocks:
         idx_s, idx_e = block['idx_range']
         labels[idx_s:idx_e] = 1
     labels = labels.astype(np.uint8)
 
+    # Convert to sparse matrices for fast processing
     adj = sp.lil_matrix(adj_mat)
     features = sp.csr_matrix(attr_mat)
 

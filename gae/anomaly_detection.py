@@ -21,6 +21,8 @@ class AnomalyDetectionRunner():
         self.iteration = FLAGS.iterations
         self.model = FLAGS.gcn_model
 
+        self.data_name = 'twitter-anomalies'
+
         self.adj_mat = FLAGS.adj_mat_path
         self.attr_mat = FLAGS.attr_path
         self.use_features = FLAGS.features
