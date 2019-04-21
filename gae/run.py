@@ -22,6 +22,7 @@ flags.DEFINE_float('alpha', 0.8, 'balance parameter')
 flags.DEFINE_string('gcn_model', sys.argv[1], 'model to use.')
 flags.DEFINE_string('adj_mat_path', sys.argv[2], 'Path to adjacency matrix')
 flags.DEFINE_string('attr_path', sys.argv[3], 'Path to attributes matrix')
+flags.DEFINE_string('labels_path', sys.argv[4], 'Path to anomaly labels')
 
 seed = 7
 np.random.seed(seed)

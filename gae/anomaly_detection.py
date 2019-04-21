@@ -1,6 +1,7 @@
 from __future__ import division
 from __future__ import print_function
 import os
+import sys
 # Train on CPU (hide GPU) due to memory constraints
 os.environ['CUDA_VISIBLE_DEVICES'] = ""
 
@@ -8,7 +9,7 @@ import tensorflow as tf
 from constructor import get_placeholder, get_model, get_optimizer, update
 import numpy as np
 from input_data import format_data
-from sklearn.metrics import roc_auc_score, average_precision_score
+from sklearn.metrics import roc_auc_score, f1_score, average_precision_score
 import pandas as pd
 
 # Settings
@@ -25,12 +26,13 @@ class AnomalyDetectionRunner():
 
         self.adj_mat = FLAGS.adj_mat_path
         self.attr_mat = FLAGS.attr_path
+        self.labels = FLAGS.labels_path
         self.use_features = FLAGS.features
 
     def erun(self):
         model_str = self.model
         # load data
-        feas = format_data(self.adj_mat, self.attr_mat, self.use_features)
+        feas = format_data(self.adj_mat, self.attr_mat, self.labels, self.use_features)
         print("feature number: {}".format(feas['num_features']))
 
         print(feas)
@@ -62,10 +64,22 @@ class AnomalyDetectionRunner():
                 auc = roc_auc_score(y_true, reconstruction_errors)
                 print(auc)
 
-        sorted_errors = np.argsort(-reconstruction_errors, axis=0)
-        with open('output/{}-ranking.txt'.format(self.data_name), 'w') as f:
-            for index in sorted_errors:
-                f.write("%s\n" % feas['labels'][index][0])
+        # sorted_errors = np.argsort(-reconstruction_errors, axis=0)
+        # with open('output/{}-ranking.txt'.format(self.data_name), 'w') as f:
+        #     for index in sorted_errors:
+        #         f.write("%s\n" % feas['labels'][index][0])
 
-        df = pd.DataFrame({'AD-GCA':reconstruction_errors})
-        df.to_csv('output/{}-scores.csv'.format(self.data_name), index=False, sep=',')
+        y_pred = []
+        sorted_errors = np.argsort(-reconstruction_errors, axis=0)
+        for index in sorted_errors:
+            y_pred.append(feas['labels'][index][0])
+        y_pred = np.asarray(y_pred)
+
+        # Save the output labels
+        np.save('pred_anomalies_gcn.npy', y_pred)
+
+        # f1 = f1_score(y_true, y_pred)
+        # print("The final F1 score is: %.4f" % f1)
+
+        # df = pd.DataFrame({'AD-GCA':reconstruction_errors})
+        # df.to_csv('output/{}-scores.csv'.format(self.data_name), index=False, sep=',')

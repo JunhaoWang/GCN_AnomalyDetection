@@ -47,37 +47,38 @@ def generate_dense_block_attribute(attr_mat, k, lam):
 
     return attr
 
-
-def format_data(adj_mat_path, attr_mat_path, use_features):
+def format_data(adj_mat_path, attr_mat_path, labels_path, use_features):
 
     adj_mat = np.load(adj_mat_path)
     adj_mat = adj_mat.astype(np.uint8)
     attr_mat = np.load(attr_mat_path)
+    labels = np.load(labels_path)
+    labels = labels.astype(np.uint8)
 
     mixed = np.concatenate((adj_mat, attr_mat), 1)
     input_size = mixed.shape[0]
 
-    # First we inject dense blocks into the adjacency matrix
-    blocks = [
-        {'idx_range': (0, 1000), 'ajacency_density': .1, 'attribute_density': .3},
-        {'idx_range': (2000, 3000), 'ajacency_density': .15, 'attribute_density': .3},
-        {'idx_range': (5000, 6000), 'ajacency_density': .2, 'attribute_density': .3},
-    ]
-
-    for ind, b in enumerate(blocks):
-        s_idx = b['idx_range'][0]
-        e_idx = b['idx_range'][1]
-        adj_mat[s_idx:e_idx, s_idx:e_idx] = generate_dense_block_ajacency(e_idx - s_idx, b['ajacency_density'])
-
-    # Now we inject dense blocks into the attribute matrix
-    attr_mat = generate_dense_block_attribute(attr_mat, 3, 1e-9)
-
-    # Setting labels to be 0 or 1 based on whether or not they correspond to an anomaly
-    labels = np.zeros((input_size, 1))
-    for block in blocks:
-        idx_s, idx_e = block['idx_range']
-        labels[idx_s:idx_e] = 1
-    labels = labels.astype(np.uint8)
+    # # First we inject dense blocks into the adjacency matrix
+    # blocks = [
+    #     {'idx_range': (0, 1000), 'ajacency_density': adj_density},
+    #     {'idx_range': (2000, 3000), 'ajacency_density': adj_density},
+    #     {'idx_range': (5000, 6000), 'ajacency_density': adj_density},
+    # ]
+    #
+    # for ind, b in enumerate(blocks):
+    #     s_idx = b['idx_range'][0]
+    #     e_idx = b['idx_range'][1]
+    #     adj_mat[s_idx:e_idx, s_idx:e_idx] = generate_dense_block_ajacency(e_idx - s_idx, b['ajacency_density'])
+    #
+    # # Now we inject dense blocks into the attribute matrix
+    # attr_mat = generate_dense_block_attribute(attr_mat, 3, 1e-9)
+    #
+    # # Setting labels to be 0 or 1 based on whether or not they correspond to an anomaly
+    # labels = np.zeros((input_size, 1))
+    # for block in blocks:
+    #     idx_s, idx_e = block['idx_range']
+    #     labels[idx_s:idx_e] = 1
+    # labels = labels.astype(np.uint8)
 
     # Convert to sparse matrices for fast processing
     adj = sp.lil_matrix(adj_mat)
