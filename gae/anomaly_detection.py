@@ -26,13 +26,13 @@ class AnomalyDetectionRunner():
 
         self.adj_mat = FLAGS.adj_mat_path
         self.attr_mat = FLAGS.attr_path
-        self.labels = FLAGS.labels_path
         self.use_features = FLAGS.features
+        self.adj_density = float(FLAGS.adj_density)
 
     def erun(self):
         model_str = self.model
         # load data
-        feas = format_data(self.adj_mat, self.attr_mat, self.labels, self.use_features)
+        feas = format_data(self.adj_mat, self.attr_mat, self.use_features, self.adj_density)
         print("feature number: {}".format(feas['num_features']))
 
         print(feas)
@@ -75,11 +75,11 @@ class AnomalyDetectionRunner():
             y_pred.append(feas['labels'][index][0])
         y_pred = np.asarray(y_pred)
 
-        # Save the output labels
-        np.save('pred_anomalies_gcn.npy', y_pred)
+        # # Save the output labels
+        # np.save('pred_anomalies_gcn.npy', y_pred)
 
-        # f1 = f1_score(y_true, y_pred)
-        # print("The final F1 score is: %.4f" % f1)
+        f1 = f1_score(y_true, y_pred)
+        print("The final F1 score for a density of %.3f is: %.4f" % (self.adj_density, f1))
 
         # df = pd.DataFrame({'AD-GCA':reconstruction_errors})
         # df.to_csv('output/{}-scores.csv'.format(self.data_name), index=False, sep=',')
